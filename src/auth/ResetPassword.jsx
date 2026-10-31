@@ -8,9 +8,9 @@ const ResetPassword = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const mobile =
-        location.state?.mobile ||
-        sessionStorage.getItem("passwordResetMobile") ||
+    const email =
+        location.state?.email ||
+        sessionStorage.getItem("passwordResetEmail") ||
         "";
 
     const resetToken = location.state?.resetToken || "";
@@ -26,7 +26,7 @@ const ResetPassword = () => {
         setError("");
         setMessage("");
 
-        if (!mobile || !resetToken) {
+        if (!email || !resetToken) {
             setError(
                 "Your password-reset session is missing or expired. Please verify your OTP again."
             );
@@ -49,7 +49,7 @@ const ResetPassword = () => {
             const response = await api.post(
                 "/auth/reset-password",
                 {
-                    mobile,
+                    email,
                     resetToken,
                     newPassword
                 }
@@ -60,7 +60,7 @@ const ResetPassword = () => {
                 "Password reset successfully."
             );
 
-            sessionStorage.removeItem("passwordResetMobile");
+            sessionStorage.removeItem("passwordResetEmail");
 
             setTimeout(() => {
                 navigate("/", { replace: true });
@@ -82,8 +82,9 @@ const ResetPassword = () => {
                 <h2>Reset Password</h2>
 
                 <p>
-                    Create a new password for the account ending in{" "}
-                    {mobile ? mobile.slice(-4) : "----"}.
+                    Create a new password for:
+                    <br />
+                    <strong>{email || "Email not available"}</strong>
                 </p>
 
                 {error && (
@@ -124,7 +125,7 @@ const ResetPassword = () => {
                     <button
                         type="submit"
                         className="auth-button"
-                        disabled={loading || !mobile || !resetToken}
+                        disabled={loading || !email || !resetToken}
                     >
                         {loading ? "Resetting..." : "Reset Password"}
                     </button>

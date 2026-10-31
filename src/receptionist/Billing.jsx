@@ -305,6 +305,8 @@ const Billing = () => {
         appointment
     ) => {
 
+        console.log("Selected appointment:", appointment);
+
         setMessage("");
         setError("");
 

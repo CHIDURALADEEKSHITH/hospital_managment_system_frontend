@@ -7,7 +7,7 @@ import "./auth.css";
 const ForgotPassword = () => {
     const navigate = useNavigate();
 
-    const [mobile, setMobile] = useState("");
+    const [email, setEmail] = useState("");
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
     const [demoOtp, setDemoOtp] = useState("");
@@ -20,8 +20,10 @@ const ForgotPassword = () => {
         setMessage("");
         setDemoOtp("");
 
-        if (!/^[0-9]{10}$/.test(mobile.trim())) {
-            setError("Enter a valid 10-digit mobile number.");
+        const normalizedEmail = email.trim().toLowerCase();
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+            setError("Enter a valid email address.");
             return;
         }
 
@@ -30,7 +32,7 @@ const ForgotPassword = () => {
 
             const response = await api.post(
                 "/auth/forgot-password",
-                { mobile: mobile.trim() }
+                { email: normalizedEmail }
             );
 
             setMessage(
@@ -43,13 +45,13 @@ const ForgotPassword = () => {
             }
 
             sessionStorage.setItem(
-                "passwordResetMobile",
-                mobile.trim()
+                "passwordResetEmail",
+                normalizedEmail
             );
 
             navigate("/verify-otp", {
                 state: {
-                    mobile: mobile.trim(),
+                    email: normalizedEmail,
                     message: response.data.message,
                     demoOtp:
                         response.data.demoMode
@@ -74,7 +76,7 @@ const ForgotPassword = () => {
                 <h2>Forgot Password</h2>
 
                 <p>
-                    Enter your registered mobile number to
+                    Enter your registered email address to
                     receive a password-reset OTP.
                 </p>
 
@@ -92,17 +94,13 @@ const ForgotPassword = () => {
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label>Registered Mobile Number</label>
+                        <label>Registered Email Address</label>
                         <input
-                            type="tel"
-                            inputMode="numeric"
-                            maxLength={10}
-                            placeholder="Enter 10-digit mobile number"
-                            value={mobile}
+                            type="email"
+                            placeholder="Enter your registered email"
+                            value={email}
                             onChange={(e) =>
-                                setMobile(
-                                    e.target.value.replace(/\D/g, "")
-                                )
+                                setEmail(e.target.value)
                             }
                             required
                         />

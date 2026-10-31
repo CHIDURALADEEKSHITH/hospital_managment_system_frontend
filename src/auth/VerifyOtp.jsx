@@ -8,9 +8,9 @@ const VerifyOtp = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const mobile =
-        location.state?.mobile ||
-        sessionStorage.getItem("passwordResetMobile") ||
+    const email =
+        location.state?.email ||
+        sessionStorage.getItem("passwordResetEmail") ||
         "";
 
     const demoOtp = location.state?.demoOtp || "";
@@ -28,8 +28,8 @@ const VerifyOtp = () => {
             return;
         }
 
-        if (!mobile) {
-            setError("Mobile number is missing. Please start again.");
+        if (!email) {
+            setError("Email address is missing. Please start again.");
             return;
         }
 
@@ -37,13 +37,13 @@ const VerifyOtp = () => {
             setLoading(true);
 
             const response = await api.post("/auth/verify-otp", {
-                mobile,
+                email,
                 otp
             });
 
             navigate("/reset-password", {
                 state: {
-                    mobile,
+                    email,
                     resetToken: response.data.resetToken
                 }
             });
@@ -64,8 +64,9 @@ const VerifyOtp = () => {
                 <h2>Verify OTP</h2>
 
                 <p>
-                    Enter the OTP for mobile number ending in{" "}
-                    {mobile ? mobile.slice(-4) : "----"}.
+                    Enter the OTP sent to your registered email address:
+                    <br />
+                    <strong>{email || "Email not available"}</strong>
                 </p>
 
                 {demoOtp && (
@@ -99,7 +100,7 @@ const VerifyOtp = () => {
                     <button
                         type="submit"
                         className="auth-button"
-                        disabled={loading || !mobile}
+                        disabled={loading || !email}
                     >
                         {loading ? "Verifying..." : "Verify OTP"}
                     </button>

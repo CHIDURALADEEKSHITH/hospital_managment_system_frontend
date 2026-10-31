@@ -16,7 +16,7 @@ const BillingManagement = () => {
         loadBills();
     }, []);
 
-
+    // LOAD ALL HOSPITAL BILLS
     const loadBills = async () => {
 
         try {
@@ -34,7 +34,7 @@ const BillingManagement = () => {
 
         } catch (err) {
 
-            console.error(err);
+            console.error("Unable to load bills:", err);
 
             setBills([]);
 
@@ -50,38 +50,59 @@ const BillingManagement = () => {
         }
     };
 
-
+    // FILTER BILLS
     const filteredBills = bills.filter((bill) => {
 
         const value = search.toLowerCase();
 
+        const patientName =
+            bill.patient?.fullName || "";
+
+        const patientId =
+            bill.patient?.id || "";
+
+        const uhid =
+            bill.patient?.uhid || "";
+
         return (
-            String(bill.id || "").includes(value) ||
-            String(bill.patientName || "")
-                .toLowerCase()
-                .includes(value) ||
-            String(bill.status || "")
-                .toLowerCase()
-                .includes(value)
+            String(bill.id || "").toLowerCase().includes(value) ||
+            String(bill.billNumber || "").toLowerCase().includes(value) ||
+            String(patientName).toLowerCase().includes(value) ||
+            String(patientId).toLowerCase().includes(value) ||
+            String(uhid).toLowerCase().includes(value) ||
+            String(bill.paymentStatus || "").toLowerCase().includes(value)
         );
 
     });
 
-
+    // CALCULATE REVENUE
     const calculateTotal = () => {
 
         return filteredBills.reduce(
             (total, bill) =>
-                total + Number(
-                    bill.totalAmount ||
-                    bill.amount ||
-                    0
-                ),
+                total + Number(bill.totalAmount || 0),
             0
         );
 
     };
 
+    // GET PATIENT DISPLAY
+    const getPatientName = (bill) => {
+
+        if (bill.patient?.fullName) {
+            return bill.patient.fullName;
+        }
+
+        if (bill.patient?.uhid) {
+            return bill.patient.uhid;
+        }
+
+        if (bill.patient?.id) {
+            return `Patient ID: ${bill.patient.id}`;
+        }
+
+        return "Not Available";
+    };
 
     return (
 
@@ -106,6 +127,7 @@ const BillingManagement = () => {
 
             </div>
 
+            {/* BILLING SUMMARY */}
 
             <div className="billing-summary">
 
@@ -119,7 +141,6 @@ const BillingManagement = () => {
 
                 </div>
 
-
                 <div className="billing-summary-card">
 
                     <span>Total Revenue</span>
@@ -132,6 +153,7 @@ const BillingManagement = () => {
 
             </div>
 
+            {/* SEARCH AND REFRESH */}
 
             <div className="admin-toolbar">
 
@@ -141,7 +163,7 @@ const BillingManagement = () => {
 
                     <input
                         type="text"
-                        placeholder="Search bills..."
+                        placeholder="Search bills, patients or UHID..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
@@ -157,13 +179,13 @@ const BillingManagement = () => {
 
             </div>
 
-
             {error && (
                 <div className="admin-error">
                     {error}
                 </div>
             )}
 
+            {/* HOSPITAL BILLS TABLE */}
 
             <div className="admin-table-card">
 
@@ -174,7 +196,6 @@ const BillingManagement = () => {
                     </div>
 
                 </div>
-
 
                 {loading ? (
 
@@ -209,6 +230,7 @@ const BillingManagement = () => {
                                 <tr>
                                     <th>Bill ID</th>
                                     <th>Patient</th>
+                                    <th>Patient ID</th>
                                     <th>Amount</th>
                                     <th>Payment Status</th>
                                     <th>Date</th>
@@ -229,34 +251,32 @@ const BillingManagement = () => {
                                         </td>
 
                                         <td>
-                                            {bill.patientName ||
-                                                bill.patientId ||
-                                                "-"}
+                                            {getPatientName(bill)}
+                                        </td>
+
+                                        <td>
+                                            {bill.patient?.id || "-"}
                                         </td>
 
                                         <td>
                                             ₹
                                             {Number(
-                                                bill.totalAmount ||
-                                                bill.amount ||
-                                                0
+                                                bill.totalAmount || 0
                                             ).toLocaleString("en-IN")}
                                         </td>
 
                                         <td>
 
                                             <span className="status-badge status-approved">
-                                                {bill.status ||
-                                                    bill.paymentStatus ||
-                                                    "UNKNOWN"}
+                                                {bill.paymentStatus || "UNKNOWN"}
                                             </span>
 
                                         </td>
 
                                         <td>
-                                            {bill.date ||
-                                                bill.billDate ||
-                                                "-"}
+                                            {bill.billDate
+                                                ? new Date(bill.billDate).toLocaleString("en-IN")
+                                                : "-"}
                                         </td>
 
                                     </tr>
@@ -274,6 +294,7 @@ const BillingManagement = () => {
             </div>
 
         </div>
+
     );
 };
 
