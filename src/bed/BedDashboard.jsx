@@ -262,7 +262,7 @@ const BedManagement = () => {
                         ← Dashboard
                     </button>
 
-                    <h1>Bed Management</h1>
+                    <h1>Bed Manager</h1>
 
                     <p>
                         Manage hospital beds, rooms and wards

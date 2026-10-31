@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import BedSidebar from "./BedSidebar";
 import "./bed.css";
 
 const WardManagement = () => {
 
-    const navigate = useNavigate();
-
     const [wards, setWards] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const [showForm, setShowForm] = useState(false);
+    const [wardName, setWardName] = useState("");
+    const [message, setMessage] = useState("");
+    const [error, setError] = useState("");
 
     useEffect(() => {
         loadWards();
@@ -17,19 +19,36 @@ const WardManagement = () => {
 
     const loadWards = async () => {
         try {
-            const response = await api.get("/bed/beds");
+            setLoading(true);
 
-            const beds = response.data || [];
+            const [wardResponse, bedResponse] = await Promise.all([
+                api.get("/bed/wards"),
+                api.get("/bed/beds")
+            ]);
+
+            const wardNames = wardResponse.data || [];
+            const beds = bedResponse.data || [];
 
             const wardMap = {};
 
+            // Add all saved wards, including empty wards
+            wardNames.forEach((name) => {
+                wardMap[name] = {
+                    name,
+                    rooms: new Set(),
+                    totalBeds: 0,
+                    availableBeds: 0,
+                    occupiedBeds: 0
+                };
+            });
+
+            // Add bed information to corresponding wards
             beds.forEach((bed) => {
+                const name = bed.wardName || "Unassigned Ward";
 
-                const wardName = bed.wardName || "Unassigned Ward";
-
-                if (!wardMap[wardName]) {
-                    wardMap[wardName] = {
-                        name: wardName,
+                if (!wardMap[name]) {
+                    wardMap[name] = {
+                        name,
                         rooms: new Set(),
                         totalBeds: 0,
                         availableBeds: 0,
@@ -37,7 +56,7 @@ const WardManagement = () => {
                     };
                 }
 
-                const ward = wardMap[wardName];
+                const ward = wardMap[name];
 
                 if (bed.roomNumber) {
                     ward.rooms.add(bed.roomNumber);
@@ -61,125 +80,167 @@ const WardManagement = () => {
 
             setWards(wardList);
 
-        } catch (error) {
-            console.error("Unable to load wards", error);
+        } catch (err) {
+            console.error("Unable to load wards", err);
+            setError("Unable to load ward details.");
         } finally {
             setLoading(false);
         }
     };
 
+    const handleAddWard = async (e) => {
+        e.preventDefault();
+
+        setMessage("");
+        setError("");
+
+        if (!wardName.trim()) {
+            setError("Please enter a ward name.");
+            return;
+        }
+
+        try {
+            await api.post("/bed/ward", {
+                wardName: wardName.trim()
+            });
+
+            setMessage("Ward added successfully!");
+            setWardName("");
+            setShowForm(false);
+
+            await loadWards();
+
+        } catch (err) {
+            setError(
+                err.response?.data?.message ||
+                err.response?.data ||
+                "Unable to add ward."
+            );
+        }
+    };
+
     return (
         <div className="bed-layout">
+
             <BedSidebar />
-            <main className="bed-main bed-page">
 
-            <header className="bed-page-header">
+            <div className="bed-main-content">
 
-                <div>
-
-                    <button
-                        className="bed-back-button"
-                        onClick={() => navigate("/bed")}
-                    >
-                        ← Dashboard
-                    </button>
-
-                    <h1>Ward Management</h1>
-
-                    <p>
-                        View hospital wards and their bed availability
-                    </p>
-
-                </div>
-
-            </header>
-
-            <div className="bed-table-card">
-
-                <div className="bed-table-header">
-
+                <div className="bed-page-header">
                     <div>
-                        <h2>Hospital Wards</h2>
-
-                        <span>
-                            {wards.length} ward(s)
-                        </span>
+                        <h1>Ward Management</h1>
+                        <p>Manage hospital wards and monitor bed availability.</p>
                     </div>
 
                     <button
-                        className="bed-refresh-button"
+                        className="bed-primary-btn"
+                        onClick={() => {
+                            setShowForm(!showForm);
+                            setMessage("");
+                            setError("");
+                        }}
+                    >
+                        {showForm ? "Cancel" : "+ Add Ward"}
+                    </button>
+                </div>
+
+                {message && (
+                    <div className="success-message">
+                        {message}
+                    </div>
+                )}
+
+                {error && (
+                    <div className="error-message">
+                        {error}
+                    </div>
+                )}
+
+                {showForm && (
+                    <div className="bed-form-card">
+                        <h2>Add New Ward</h2>
+
+                        <form onSubmit={handleAddWard}>
+
+                            <div className="bed-form-group">
+                                <label>Ward Name</label>
+
+                                <input
+                                    type="text"
+                                    placeholder="Enter ward name"
+                                    value={wardName}
+                                    onChange={(e) =>
+                                        setWardName(e.target.value)
+                                    }
+                                    required
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="bed-primary-btn"
+                            >
+                                Save Ward
+                            </button>
+
+                        </form>
+                    </div>
+                )}
+
+                <div className="bed-section-header">
+                    <h2>Hospital Wards</h2>
+
+                    <button
+                        className="bed-secondary-btn"
                         onClick={loadWards}
                     >
-                        ↻ Refresh
+                        Refresh
                     </button>
-
                 </div>
 
                 {loading ? (
-
-                    <div className="bed-loading">
-                        Loading wards...
-                    </div>
-
+                    <p>Loading wards...</p>
                 ) : wards.length === 0 ? (
-
-                    <div className="bed-empty">
-
-                        <div>🏥</div>
-
-                        <h3>No Wards Found</h3>
-
-                        <p>
-                            Add beds from Bed Management to create
-                            ward information.
-                        </p>
-
+                    <div className="bed-empty-state">
+                        No wards found. Add your first ward.
                     </div>
-
                 ) : (
 
-                    <div className="bed-card-grid">
+                    <div className="ward-grid">
 
-                        {wards.map((ward) => (
+                        {wards.map((ward, index) => (
 
-                            <div
-                                className="ward-card"
-                                key={ward.name}
-                            >
+                            <div className="ward-card" key={index}>
 
-                                <div className="ward-card-icon">
-                                    🏥
+                                <div className="ward-card-header">
+                                    <h3>{ward.name}</h3>
+                                    <span>🏥</span>
                                 </div>
 
-                                <div className="ward-card-content">
+                                <div className="ward-stats">
 
-                                    <h3>
-                                        {ward.name}
-                                    </h3>
+                                    <div>
+                                        <h4>{ward.rooms}</h4>
+                                        <p>Rooms</p>
+                                    </div>
 
-                                    <span className="bed-category">
-                                        Hospital Ward
-                                    </span>
+                                    <div>
+                                        <h4>{ward.totalBeds}</h4>
+                                        <p>Total Beds</p>
+                                    </div>
 
-                                    <p>
-                                        Rooms: {ward.rooms}
-                                    </p>
+                                    <div>
+                                        <h4>{ward.availableBeds}</h4>
+                                        <p>Available</p>
+                                    </div>
 
-                                    <p>
-                                        Total Beds: {ward.totalBeds}
-                                    </p>
-
-                                    <p>
-                                        Available Beds:{" "}
-                                        {ward.availableBeds}
-                                    </p>
-
-                                    <p>
-                                        Occupied Beds:{" "}
-                                        {ward.occupiedBeds}
-                                    </p>
+                                    <div>
+                                        <h4>{ward.occupiedBeds}</h4>
+                                        <p>Occupied</p>
+                                    </div>
 
                                 </div>
+
                             </div>
 
                         ))}
@@ -190,7 +251,6 @@ const WardManagement = () => {
 
             </div>
 
-            </main>
         </div>
     );
 };

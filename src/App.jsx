@@ -22,6 +22,7 @@ import AppointmentManagement from "./admin/AppointmentManagement";
 import BillingManagement from "./admin/BillingManagement";
 import HospitalOverview from "./admin/HospitalOverview";
 import AdminSubpageLayout from "./admin/AdminSubpageLayout";
+import BedsOverview from "./admin/BedsOverview";
 
 /* =========================
    DOCTOR
@@ -102,10 +103,13 @@ import BedManagement from "./bed/BedManagement";
 import BedAdmissions from "./bed/Admissions";
 import Transfers from "./bed/Transfers";
 import BedSubpageLayout from "./bed/BedSubpageLayout";
+import BedAvailability from "./bed/BedAvailability";
+import RoomManagement from "./bed/RoomManagement";
 
 import ForgotPassword from "./auth/ForgotPassword";
 import VerifyOtp from "./auth/VerifyOtp";
 import ResetPassword from "./auth/ResetPassword";
+
 
 
 function App() {
@@ -264,6 +268,16 @@ function App() {
                     </ProtectedRoute>
                 }
             />
+            <Route
+    path="/admin/beds"
+    element={
+        <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <AdminSubpageLayout>
+                <BedsOverview />
+            </AdminSubpageLayout>
+        </ProtectedRoute>
+    }
+/>
 
 
             {/* =================================================
@@ -798,6 +812,27 @@ function App() {
                     </ProtectedRoute>
                 }
             />
+
+            <Route
+    path="/bed/availability"
+    element={
+        <ProtectedRoute allowedRoles={["BED_INCHARGE"]}>
+            <BedSubpageLayout>
+                <BedAvailability />
+            </BedSubpageLayout>
+        </ProtectedRoute>
+    }
+/>
+<Route
+    path="/bed/rooms"
+    element={
+        <ProtectedRoute allowedRoles={["BED_INCHARGE"]}>
+            <BedSubpageLayout>
+                <RoomManagement />
+            </BedSubpageLayout>
+        </ProtectedRoute>
+    }
+/>
 
 
             {/* =================================================

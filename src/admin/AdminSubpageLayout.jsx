@@ -1,3 +1,4 @@
+
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./admin.css";
@@ -8,7 +9,8 @@ const adminNavigation = [
     { label: "Patients", icon: "🧑", path: "/admin/patients" },
     { label: "Appointments", icon: "📅", path: "/admin/appointments" },
     { label: "Billing", icon: "₹", path: "/admin/billing" },
-    { label: "Hospital Overview", icon: "📊", path: "/admin/overview" }
+    { label: "Hospital Overview", icon: "📊", path: "/admin/overview" },
+    { label: "Beds", icon: "🛏️", path: "/admin/beds" }
 ];
 
 const AdminSubpageLayout = ({ children }) => {

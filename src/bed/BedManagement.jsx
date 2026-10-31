@@ -9,7 +9,11 @@ const BedManagement = () => {
     const navigate = useNavigate();
 
     const [beds, setBeds] = useState([]);
+    const [wards, setWards] = useState([]);
+    const [rooms, setRooms] = useState([]);
+
     const [loading, setLoading] = useState(true);
+    const [roomsLoading, setRoomsLoading] = useState(false);
 
     const [showForm, setShowForm] = useState(false);
     const [editingBed, setEditingBed] = useState(null);
@@ -25,6 +29,8 @@ const BedManagement = () => {
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
 
+    // LOAD BEDS AND EXISTING WARDS
+
     const loadBeds = async () => {
 
         try {
@@ -32,22 +38,21 @@ const BedManagement = () => {
             setLoading(true);
             setError("");
 
-            const response = await api.get(
-                "/bed/beds"
-            );
+            const [response, wardResponse] = await Promise.all([
+                api.get("/bed/beds"),
+                api.get("/bed/wards")
+            ]);
 
-            setBeds(
-                Array.isArray(response.data)
-                    ? response.data
-                    : []
-            );
+            const bedList = Array.isArray(response.data)
+                ? response.data
+                : [];
+
+            setBeds(bedList);
+            setWards(Array.isArray(wardResponse.data) ? wardResponse.data : []);
 
         } catch (error) {
 
-            console.error(
-                "Unable to load beds:",
-                error
-            );
+            console.error("Unable to load beds:", error);
 
             setError(
                 typeof error.response?.data === "string"
@@ -61,22 +66,66 @@ const BedManagement = () => {
         }
     };
 
-
     useEffect(() => {
         loadBeds();
     }, []);
 
+    // LOAD ROOMS FOR SELECTED WARD
+
+    const loadRooms = async (wardName) => {
+
+        if (!wardName) {
+            setRooms([]);
+            return;
+        }
+
+        try {
+
+            setRoomsLoading(true);
+
+            const response = await api.get(
+                `/bed/rooms/ward/${encodeURIComponent(wardName)}`
+            );
+
+            setRooms(
+                Array.isArray(response.data)
+                    ? response.data
+                    : []
+            );
+
+        } catch (error) {
+
+            console.error("Unable to load rooms:", error);
+
+            setRooms([]);
+            setError("Unable to load rooms for this ward.");
+
+        } finally {
+
+            setRoomsLoading(false);
+        }
+    };
+
+    // FORM CHANGE
 
     const handleChange = (e) => {
 
         const { name, value } = e.target;
 
-        setForm({
-            ...form,
-            [name]: value
-        });
+        setForm(prev => ({
+            ...prev,
+            [name]: value,
+            ...(name === "wardName" ? { roomNumber: "" } : {})
+        }));
+
+        if (name === "wardName") {
+            setError("");
+            setRooms([]);
+            loadRooms(value);
+        }
     };
 
+    // RESET FORM
 
     const resetForm = () => {
 
@@ -88,10 +137,12 @@ const BedManagement = () => {
             status: "AVAILABLE"
         });
 
+        setRooms([]);
         setEditingBed(null);
         setShowForm(false);
     };
 
+    // OPEN ADD FORM
 
     const openAddForm = () => {
 
@@ -106,12 +157,14 @@ const BedManagement = () => {
             status: "AVAILABLE"
         });
 
+        setRooms([]);
         setEditingBed(null);
         setShowForm(true);
     };
 
+    // OPEN EDIT FORM
 
-    const openEditForm = (bed) => {
+    const openEditForm = async (bed) => {
 
         setError("");
         setMessage("");
@@ -126,8 +179,11 @@ const BedManagement = () => {
 
         setEditingBed(bed);
         setShowForm(true);
+
+        await loadRooms(bed.wardName);
     };
 
+    // SAVE BED
 
     const handleSubmit = async (e) => {
 
@@ -136,13 +192,13 @@ const BedManagement = () => {
         setError("");
         setMessage("");
 
-        if (!form.wardName.trim()) {
-            setError("Please enter ward name.");
+        if (!form.wardName) {
+            setError("Please select a ward.");
             return;
         }
 
-        if (!form.roomNumber.trim()) {
-            setError("Please enter room number.");
+        if (!form.roomNumber) {
+            setError("Please select a room.");
             return;
         }
 
@@ -160,20 +216,21 @@ const BedManagement = () => {
                     form
                 );
 
-                setMessage(
-                    "Bed updated successfully."
-                );
+                setMessage("Bed updated successfully.");
 
             } else {
 
                 await api.post(
                     "/bed/bed",
-                    form
+                    {
+                        wardName: form.wardName,
+                        roomNumber: form.roomNumber,
+                        bedNumber: form.bedNumber,
+                        bedType: form.bedType
+                    }
                 );
 
-                setMessage(
-                    "Bed added successfully."
-                );
+                setMessage("Bed added successfully.");
             }
 
             resetForm();
@@ -182,41 +239,28 @@ const BedManagement = () => {
 
         } catch (error) {
 
-            console.error(
-                "Unable to save bed:",
-                error
-            );
+            console.error("Unable to save bed:", error);
 
             setError(
                 typeof error.response?.data === "string"
                     ? error.response.data
-                    : "Unable to save bed."
+                    : error.response?.data?.message ||
+                      "Unable to save bed."
             );
         }
     };
 
+    // BED STATUS STYLE
 
     const getStatusClass = (status) => {
 
-        if (status === "AVAILABLE") {
-            return "available";
-        }
-
-        if (status === "OCCUPIED") {
-            return "occupied";
-        }
-
-        if (status === "RESERVED") {
-            return "reserved";
-        }
-
-        if (status === "MAINTENANCE") {
-            return "maintenance";
-        }
+        if (status === "AVAILABLE") return "available";
+        if (status === "OCCUPIED") return "occupied";
+        if (status === "RESERVED") return "reserved";
+        if (status === "MAINTENANCE") return "maintenance";
 
         return "";
     };
-
 
     const availableCount = beds.filter(
         bed => bed.status === "AVAILABLE"
@@ -230,551 +274,429 @@ const BedManagement = () => {
         bed => bed.status === "MAINTENANCE"
     ).length;
 
+    // SHOW ROOMS WITH CAPACITY
+    // While editing, also show the bed's existing room.
+
+    const availableRooms = rooms.filter(room =>
+        Number(room.availableCapacity) > 0 ||
+        (
+            editingBed &&
+            room.roomNumber === editingBed.roomNumber
+        )
+    );
 
     return (
 
         <div className="bed-layout">
+
             <BedSidebar />
+
             <main className="bed-main bed-page">
 
+                {/* HEADER */}
 
-            {/* HEADER */}
-
-            <header className="bed-page-header">
-
-                <div>
-
-                    <button
-                        className="bed-back-button"
-                        onClick={() => navigate("/bed")}
-                    >
-                        ← Dashboard
-                    </button>
-
-                    <h1>
-                        Bed Management
-                    </h1>
-
-                    <p>
-                        Add, update and monitor hospital beds
-                    </p>
-
-                </div>
-
-
-                <button
-                    className="bed-primary-button"
-                    onClick={openAddForm}
-                >
-                    + Add Bed
-                </button>
-
-            </header>
-
-
-            {/* MESSAGE */}
-
-            {message && (
-
-                <div className="bed-success">
-                    {message}
-                </div>
-
-            )}
-
-
-            {error && (
-
-                <div className="bed-error">
-                    {error}
-                </div>
-
-            )}
-
-
-            {/* SUMMARY */}
-
-            <div className="bed-stats">
-
-
-                <div className="bed-stat-card">
-
-                    <div className="bed-stat-icon ward">
-                        🛏️
-                    </div>
+                <header className="bed-page-header">
 
                     <div>
-
-                        <span>
-                            Total Beds
-                        </span>
-
-                        <h2>
-                            {beds.length}
-                        </h2>
-
-                    </div>
-                </div>
-
-
-                <div className="bed-stat-card">
-
-                    <div className="bed-stat-icon available">
-                        ✓
-                    </div>
-
-                    <div>
-
-                        <span>
-                            Available
-                        </span>
-
-                        <h2>
-                            {availableCount}
-                        </h2>
-
-                    </div>
-
-                </div>
-
-
-                <div className="bed-stat-card">
-
-                    <div className="bed-stat-icon occupied">
-                        🛏️
-                    </div>
-
-                    <div>
-
-                        <span>
-                            Occupied
-                        </span>
-
-                        <h2>
-                            {occupiedCount}
-                        </h2>
-
-                    </div>
-
-                </div>
-
-
-                <div className="bed-stat-card">
-
-                    <div className="bed-stat-icon room">
-                        ⚙️
-                    </div>
-
-                    <div>
-
-                        <span>
-                            Maintenance
-                        </span>
-
-                        <h2>
-                            {maintenanceCount}
-                        </h2>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            {/* ADD / EDIT FORM */}
-
-            {showForm && (
-
-                <div className="bed-form-card">
-
-                    <div className="bed-form-header">
-
-                        <div>
-
-                            <span className="bed-small-label">
-                                {editingBed
-                                    ? "UPDATE BED"
-                                    : "NEW BED"}
-                            </span>
-
-                            <h2>
-                                {editingBed
-                                    ? "Update Bed"
-                                    : "Add New Bed"}
-                            </h2>
-
-                        </div>
-
 
                         <button
-                            onClick={resetForm}
-                            type="button"
+                            className="bed-back-button"
+                            onClick={() => navigate("/bed")}
                         >
-                            ✕
+                            ← Dashboard
                         </button>
 
-                    </div>
-
-
-                    <form
-                        className="bed-form"
-                        onSubmit={handleSubmit}
-                    >
-
-                        <div className="bed-form-grid">
-
-
-                            {/* WARD */}
-
-                            <div className="bed-form-group">
-
-                                <label>
-                                    Ward Name *
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="wardName"
-                                    value={form.wardName}
-                                    onChange={handleChange}
-                                    placeholder="Example: General Ward"
-                                    required
-                                />
-
-                            </div>
-
-
-                            {/* ROOM */}
-
-                            <div className="bed-form-group">
-
-                                <label>
-                                    Room Number *
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="roomNumber"
-                                    value={form.roomNumber}
-                                    onChange={handleChange}
-                                    placeholder="Example: 101"
-                                    required
-                                />
-
-                            </div>
-
-
-                            {/* BED NUMBER */}
-
-                            <div className="bed-form-group">
-
-                                <label>
-                                    Bed Number *
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="bedNumber"
-                                    value={form.bedNumber}
-                                    onChange={handleChange}
-                                    placeholder="Example: B-01"
-                                    required
-                                />
-
-                            </div>
-
-
-                            {/* BED TYPE */}
-
-                            <div className="bed-form-group">
-
-                                <label>
-                                    Bed Type
-                                </label>
-
-                                <select
-                                    name="bedType"
-                                    value={form.bedType}
-                                    onChange={handleChange}
-                                >
-
-                                    <option value="GENERAL">
-                                        General
-                                    </option>
-
-                                    <option value="PRIVATE">
-                                        Private
-                                    </option>
-
-                                    <option value="SEMI_PRIVATE">
-                                        Semi Private
-                                    </option>
-
-                                    <option value="ICU">
-                                        ICU
-                                    </option>
-
-                                    <option value="EMERGENCY">
-                                        Emergency
-                                    </option>
-
-                                </select>
-
-                            </div>
-
-
-                            {/* STATUS */}
-
-                            <div className="bed-form-group">
-
-                                <label>
-                                    Status
-                                </label>
-
-                                <select
-                                    name="status"
-                                    value={form.status}
-                                    onChange={handleChange}
-                                >
-
-                                    <option value="AVAILABLE">
-                                        Available
-                                    </option>
-
-                                    <option value="OCCUPIED">
-                                        Occupied
-                                    </option>
-
-                                    <option value="RESERVED">
-                                        Reserved
-                                    </option>
-
-                                    <option value="MAINTENANCE">
-                                        Maintenance
-                                    </option>
-
-                                </select>
-
-                            </div>
-
-                        </div>
-
-
-                        <div
-                            style={{
-                                display: "flex",
-                                gap: "10px",
-                                marginTop: "20px"
-                            }}
-                        >
-
-                            <button
-                                type="submit"
-                                className="bed-submit-button"
-                            >
-                                {editingBed
-                                    ? "Update Bed"
-                                    : "Add Bed"}
-                            </button>
-
-
-                            <button
-                                type="button"
-                                className="bed-cancel-button"
-                                onClick={resetForm}
-                            >
-                                Cancel
-                            </button>
-
-                        </div>
-
-                    </form>
-
-                </div>
-
-            )}
-
-
-            {/* BED TABLE */}
-
-            <div className="bed-table-card">
-
-                <div className="bed-table-header">
-
-                    <div>
-
-                        <h2>
-                            Hospital Beds
-                        </h2>
-
-                        <span>
-                            {beds.length} bed(s)
-                        </span>
-
-                    </div>
-
-
-                    <button
-                        className="bed-refresh-button"
-                        onClick={loadBeds}
-                    >
-                        ↻ Refresh
-                    </button>
-
-                </div>
-
-
-                {loading ? (
-
-                    <div className="bed-loading">
-                        Loading beds...
-                    </div>
-
-                ) : beds.length === 0 ? (
-
-                    <div className="bed-empty">
-
-                        <div>
-                            🛏️
-                        </div>
-
-                        <h3>
-                            No Beds Found
-                        </h3>
+                        <h1>Bed Management</h1>
 
                         <p>
-                            Add beds to start managing hospital
-                            bed availability.
+                            Add, update and monitor hospital beds
                         </p>
 
                     </div>
 
-                ) : (
+                    <button
+                        className="bed-primary-button"
+                        onClick={openAddForm}
+                    >
+                        + Add Bed
+                    </button>
 
-                    <div className="table-wrapper">
+                </header>
 
-                        <table className="bed-table">
+                {/* MESSAGES */}
 
-                            <thead>
+                {message && (
+                    <div className="bed-success">
+                        {message}
+                    </div>
+                )}
 
-                                <tr>
+                {error && (
+                    <div className="bed-error">
+                        {error}
+                    </div>
+                )}
 
-                                    <th>
-                                        Bed ID
-                                    </th>
+                {/* SUMMARY */}
 
-                                    <th>
-                                        Ward
-                                    </th>
+                <div className="bed-stats">
 
-                                    <th>
-                                        Room
-                                    </th>
+                    <div className="bed-stat-card">
+                        <div className="bed-stat-icon ward">🛏️</div>
+                        <div>
+                            <span>Total Beds</span>
+                            <h2>{beds.length}</h2>
+                        </div>
+                    </div>
 
-                                    <th>
-                                        Bed Number
-                                    </th>
+                    <div className="bed-stat-card">
+                        <div className="bed-stat-icon available">✓</div>
+                        <div>
+                            <span>Available</span>
+                            <h2>{availableCount}</h2>
+                        </div>
+                    </div>
 
-                                    <th>
-                                        Bed Type
-                                    </th>
+                    <div className="bed-stat-card">
+                        <div className="bed-stat-icon occupied">🛏️</div>
+                        <div>
+                            <span>Occupied</span>
+                            <h2>{occupiedCount}</h2>
+                        </div>
+                    </div>
 
-                                    <th>
-                                        Status
-                                    </th>
+                    <div className="bed-stat-card">
+                        <div className="bed-stat-icon room">⚙️</div>
+                        <div>
+                            <span>Maintenance</span>
+                            <h2>{maintenanceCount}</h2>
+                        </div>
+                    </div>
 
-                                    <th>
-                                        Action
-                                    </th>
+                </div>
 
-                                </tr>
+                {/* ADD / EDIT FORM */}
 
-                            </thead>
+                {showForm && (
 
+                    <div className="bed-form-card">
 
-                            <tbody>
+                        <div className="bed-form-header">
 
-                                {beds.map(bed => (
+                            <div>
 
-                                    <tr key={bed.id}>
+                                <span className="bed-small-label">
+                                    {editingBed ? "UPDATE BED" : "NEW BED"}
+                                </span>
 
-                                        <td>
-                                            #{bed.id}
-                                        </td>
+                                <h2>
+                                    {editingBed ? "Update Bed" : "Add New Bed"}
+                                </h2>
 
+                            </div>
 
-                                        <td>
+                            <button
+                                onClick={resetForm}
+                                type="button"
+                            >
+                                ✕
+                            </button>
 
-                                            <strong>
-                                                {bed.wardName || "-"}
-                                            </strong>
+                        </div>
 
-                                        </td>
+                        <form
+                            className="bed-form"
+                            onSubmit={handleSubmit}
+                        >
 
+                            <div className="bed-form-grid">
 
-                                        <td>
-                                            {bed.roomNumber || "-"}
-                                        </td>
+                                {/* WARD DROPDOWN */}
 
+                                <div className="bed-form-group">
 
-                                        <td>
-                                            {bed.bedNumber || "-"}
-                                        </td>
+                                    <label>Ward Name *</label>
 
+                                    <select
+                                        name="wardName"
+                                        value={form.wardName}
+                                        onChange={handleChange}
+                                        required
+                                    >
 
-                                        <td>
+                                        <option value="">
+                                            Select Ward
+                                        </option>
 
-                                            <span className="bed-category">
-                                                {bed.bedType ||
-                                                    "GENERAL"}
-                                            </span>
+                                        {wards.map(ward => (
+                                            <option key={ward} value={ward}>
+                                                {ward}
+                                            </option>
+                                        ))}
 
-                                        </td>
+                                    </select>
 
+                                </div>
 
-                                        <td>
+                                {/* ROOM DROPDOWN */}
 
-                                            <span
-                                                className={`bed-status ${getStatusClass(
-                                                    bed.status
-                                                )}`}
+                                <div className="bed-form-group">
+
+                                    <label>Room Number *</label>
+
+                                    <select
+                                        name="roomNumber"
+                                        value={form.roomNumber}
+                                        onChange={handleChange}
+                                        disabled={!form.wardName || roomsLoading}
+                                        required
+                                    >
+
+                                        <option value="">
+                                            {roomsLoading
+                                                ? "Loading rooms..."
+                                                : "Select Room"}
+                                        </option>
+
+                                        {availableRooms.map(room => (
+
+                                            <option
+                                                key={room.id}
+                                                value={room.roomNumber}
                                             >
-                                                {bed.status ||
-                                                    "AVAILABLE"}
-                                            </span>
+                                                Room {room.roomNumber} -
+                                                {" "}{room.availableCapacity} space(s) left
+                                            </option>
 
-                                        </td>
+                                        ))}
 
+                                    </select>
 
-                                        <td>
+                                    {form.wardName &&
+                                        !roomsLoading &&
+                                        availableRooms.length === 0 && (
+                                            <small>
+                                                No rooms with available capacity.
+                                                Please create a room first.
+                                            </small>
+                                        )}
 
-                                            <button
-                                                className="table-action primary"
-                                                onClick={() =>
-                                                    openEditForm(bed)
-                                                }
-                                            >
-                                                Edit
-                                            </button>
+                                </div>
 
-                                        </td>
+                                {/* BED NUMBER */}
 
-                                    </tr>
+                                <div className="bed-form-group">
 
-                                ))}
+                                    <label>Bed Number *</label>
 
-                            </tbody>
+                                    <input
+                                        type="text"
+                                        name="bedNumber"
+                                        value={form.bedNumber}
+                                        onChange={handleChange}
+                                        placeholder="Example: B-01"
+                                        required
+                                    />
 
-                        </table>
+                                </div>
+
+                                {/* BED TYPE */}
+
+                                <div className="bed-form-group">
+
+                                    <label>Bed Type</label>
+
+                                    <select
+                                        name="bedType"
+                                        value={form.bedType}
+                                        onChange={handleChange}
+                                    >
+
+                                        <option value="GENERAL">General</option>
+                                        <option value="PRIVATE">Private</option>
+                                        <option value="SEMI_PRIVATE">Semi Private</option>
+                                        <option value="ICU">ICU</option>
+                                        <option value="EMERGENCY">Emergency</option>
+
+                                    </select>
+
+                                </div>
+
+                                {/* STATUS - EDIT ONLY */}
+
+                                {editingBed && (
+
+                                    <div className="bed-form-group">
+
+                                        <label>Status</label>
+
+                                        <select
+                                            name="status"
+                                            value={form.status}
+                                            onChange={handleChange}
+                                        >
+
+                                            <option value="AVAILABLE">Available</option>
+                                            <option value="OCCUPIED">Occupied</option>
+                                            <option value="RESERVED">Reserved</option>
+                                            <option value="MAINTENANCE">Maintenance</option>
+
+                                        </select>
+
+                                    </div>
+
+                                )}
+
+                            </div>
+
+                            <div
+                                style={{
+                                    display: "flex",
+                                    gap: "10px",
+                                    marginTop: "20px"
+                                }}
+                            >
+
+                                <button
+                                    type="submit"
+                                    className="bed-submit-button"
+                                >
+                                    {editingBed ? "Update Bed" : "Add Bed"}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="bed-cancel-button"
+                                    onClick={resetForm}
+                                >
+                                    Cancel
+                                </button>
+
+                            </div>
+
+                        </form>
 
                     </div>
 
                 )}
 
-            </div>
+                {/* BED TABLE */}
+
+                <div className="bed-table-card">
+
+                    <div className="bed-table-header">
+
+                        <div>
+                            <h2>Hospital Beds</h2>
+                            <span>{beds.length} bed(s)</span>
+                        </div>
+
+                        <button
+                            className="bed-refresh-button"
+                            onClick={loadBeds}
+                        >
+                            ↻ Refresh
+                        </button>
+
+                    </div>
+
+                    {loading ? (
+
+                        <div className="bed-loading">
+                            Loading beds...
+                        </div>
+
+                    ) : beds.length === 0 ? (
+
+                        <div className="bed-empty">
+
+                            <div>🛏️</div>
+
+                            <h3>No Beds Found</h3>
+
+                            <p>
+                                Add rooms first, then add beds to those rooms.
+                            </p>
+
+                        </div>
+
+                    ) : (
+
+                        <div className="table-wrapper">
+
+                            <table className="bed-table">
+
+                                <thead>
+                                    <tr>
+                                        <th>Bed ID</th>
+                                        <th>Ward</th>
+                                        <th>Room</th>
+                                        <th>Bed Number</th>
+                                        <th>Bed Type</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    {beds.map(bed => (
+
+                                        <tr key={bed.id}>
+
+                                            <td>#{bed.id}</td>
+
+                                            <td>
+                                                <strong>
+                                                    {bed.wardName || "-"}
+                                                </strong>
+                                            </td>
+
+                                            <td>{bed.roomNumber || "-"}</td>
+
+                                            <td>{bed.bedNumber || "-"}</td>
+
+                                            <td>
+                                                <span className="bed-category">
+                                                    {bed.bedType || "GENERAL"}
+                                                </span>
+                                            </td>
+
+                                            <td>
+                                                <span
+                                                    className={`bed-status ${getStatusClass(
+                                                        bed.status
+                                                    )}`}
+                                                >
+                                                    {bed.status || "AVAILABLE"}
+                                                </span>
+                                            </td>
+
+                                            <td>
+                                                <button
+                                                    className="table-action primary"
+                                                    onClick={() => openEditForm(bed)}
+                                                >
+                                                    Edit
+                                                </button>
+                                            </td>
+
+                                        </tr>
+
+                                    ))}
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    )}
+
+                </div>
 
             </main>
+
         </div>
     );
 };

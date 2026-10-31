@@ -3,7 +3,9 @@ import { useAuth } from "../context/AuthContext";
 
 const bedNavigation = [
     { label: "Dashboard", icon: "📊", path: "/bed" },
+    { label: "Bed Availability", icon: "📈", path: "/bed/availability" },
     { label: "Wards", icon: "🏥", path: "/bed/wards" },
+    { label: "Rooms", icon: "🚪", path: "/bed/rooms" },
     { label: "Beds", icon: "🛏️", path: "/bed/beds" },
     { label: "Admissions", icon: "📋", path: "/bed/admissions" },
     { label: "Transfers", icon: "🔄", path: "/bed/transfers" }
@@ -51,8 +53,11 @@ const BedSidebar = () => {
                 >
                     ⇥ Logout
                 </button>
+
                 {user?.name && (
-                    <span className="bed-sidebar-user-name">{user.name}</span>
+                    <span className="bed-sidebar-user-name">
+                        {user.name}
+                    </span>
                 )}
             </div>
         </aside>

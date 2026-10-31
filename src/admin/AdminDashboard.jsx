@@ -282,6 +282,16 @@ const AdminDashboard = () => {
                         Hospital Overview
                     </button>
 
+                    <button
+                        className="admin-menu-item"
+                        onClick={() =>
+                            navigate("/admin/beds")
+                        }
+                    >
+                        <span>🛏️</span>
+                        Beds
+                    </button>
+
                 </nav>
 
 
