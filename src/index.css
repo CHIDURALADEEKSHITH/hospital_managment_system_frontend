@@ -1,3 +1,592 @@
+/* =====================================================================
+   HMS THEME (Clean & Bright)  —  one design layer for all 8 roles
+   ---------------------------------------------------------------------
+   Already imported by main.jsx (this is index.css). No JSX changes.
+   Restyles admin, doctor, nurse, patient, lab, pharmacist, receptionist,
+   bed manager, login/register and common pages by shared class patterns.
+   To re-brand: change the variables in :root.
+   ===================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+    --hms-primary: #0ea5a4;
+    --hms-blue: #2563eb;
+    --hms-grad: linear-gradient(135deg, #14b8a6 0%, #2563eb 100%);
+    --hms-grad-soft: linear-gradient(135deg, #ccfbf1 0%, #dbeafe 100%);
+
+    --hms-bg: #fbfdff;
+    --hms-surface: #ffffff;
+    --hms-border: #edf2f8;
+    --hms-text: #0f172a;
+    --hms-muted: #64748b;
+
+    --hms-r-md: 18px;
+    --hms-r-lg: 24px;
+    --hms-shadow-sm: 0 1px 2px rgba(30, 64, 120, .03), 0 4px 14px rgba(30, 64, 120, .04);
+    --hms-shadow-md: 0 12px 30px rgba(30, 64, 120, .09);
+    --hms-ring: 0 0 0 4px rgba(37, 99, 235, .15);
+    --hms-ease: cubic-bezier(.2, .7, .2, 1);
+}
+
+/* ---------- background & type ---------- */
+html body {
+    font-family: Inter, "Segoe UI", system-ui, sans-serif;
+    color: var(--hms-text);
+    background:
+        radial-gradient(900px 480px at 100% -5%, rgba(45, 212, 191, .10), transparent 60%),
+        radial-gradient(800px 480px at -5% 105%, rgba(99, 102, 241, .08), transparent 60%),
+        radial-gradient(600px 400px at 60% 40%, rgba(56, 189, 248, .05), transparent 70%),
+        var(--hms-bg);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+}
+body h1, body h2, body h3,
+body [class$="-logo"] h2 {
+    font-family: "Plus Jakarta Sans", Inter, system-ui, sans-serif;
+    letter-spacing: -.02em;
+}
+body [class$="-page"], body [class$="-layout"] { background: transparent; }
+::selection { background: rgba(37, 99, 235, .2); }
+* { scrollbar-width: thin; scrollbar-color: #c7d4e4 transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: #c7d4e4; border-radius: 8px; }
+
+@keyframes hmsRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes hmsPop  { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+body [class$="-main"] > *, body [class$="-content"] > * { animation: hmsRise .5s var(--hms-ease) both; }
+body [class$="-main"] > *:nth-child(2), body [class$="-content"] > *:nth-child(2) { animation-delay: .06s; }
+body [class$="-main"] > *:nth-child(3), body [class$="-content"] > *:nth-child(3) { animation-delay: .12s; }
+body [class$="-main"] > *:nth-child(4), body [class$="-content"] > *:nth-child(4) { animation-delay: .18s; }
+
+/* =====================================================================
+   SIDEBAR — light, with a bright gradient active item
+   ===================================================================== */
+body [class$="-sidebar"] {
+    background: #ffffff;
+    color: var(--hms-text);
+    border-right: 1px solid var(--hms-border);
+    box-shadow: 4px 0 24px rgba(30, 64, 120, .06);
+}
+body [class$="-sidebar"] :is(h2, h3, strong) { color: var(--hms-text); }
+body [class$="-sidebar"] :is(span, p, small) { color: var(--hms-muted); }
+
+body [class$="-logo-icon"], body .sidebar-brand-icon, body .logo-icon, body .navbar-logo {
+    background: var(--hms-grad);
+    color: #fff;
+    border-radius: 14px;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, .30);
+}
+body [class$="-logo"], body .sidebar-brand { border-bottom: 1px solid #eef2f8; }
+body [class$="-logo"] h2, body .sidebar-brand h2 { color: var(--hms-text); font-weight: 800; }
+
+body [class$="-nav"] button,
+body [class$="-nav-item"],
+body [class$="-menu-item"],
+body .sidebar-item {
+    color: #475569;
+    border-radius: 12px;
+    transition: background .25s var(--hms-ease), color .2s, transform .25s var(--hms-ease), box-shadow .25s;
+}
+body [class$="-nav"] button:hover,
+body [class$="-nav-item"]:hover,
+body [class$="-menu-item"]:hover,
+body .sidebar-item:hover {
+    background: #eef6ff;
+    color: #1d4ed8;
+    transform: translateX(3px);
+}
+body [class$="-nav"] button.active,
+body [class$="-nav-item"].active,
+body [class$="-menu-item"].active,
+body .sidebar-item.active {
+    background: var(--hms-grad);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, .30);
+}
+body [class$="-nav"] button.active *,
+body [class$="-nav-item"].active *,
+body [class$="-menu-item"].active *,
+body .sidebar-item.active * { color: #fff; }
+
+body [class$="-logout"], body .logout-item, body .sidebar-logout {
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    color: #be123c;
+    border-radius: 12px;
+    font-weight: 600;
+}
+body [class$="-logout"]:hover, body .logout-item:hover, body .sidebar-logout:hover {
+    background: #ffe4e6;
+    border-color: #fda4af;
+}
+body .sidebar-user, body [class$="-sidebar-bottom"] { border-top-color: #eef2f8; }
+
+/* =====================================================================
+   HEADERS
+   ===================================================================== */
+body [class$="-header"] h1, body [class$="-page-header"] h1 { font-weight: 800; color: var(--hms-text); }
+body [class$="-label"]:not(label):not([class*="small-label"]),
+body .page-label, body .welcome-label {
+    display: inline-block;
+    padding: 5px 12px;
+    margin-bottom: 10px;
+    border-radius: 999px;
+    background: var(--hms-grad-soft);
+    color: #0f766e;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+body [class$="-user"]:not(.sidebar-user) {
+    background: #fff;
+    border: 1px solid var(--hms-border);
+    border-radius: 999px;
+    box-shadow: var(--hms-shadow-sm);
+}
+body [class$="-avatar"] {
+    background: var(--hms-grad);
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, .30);
+}
+body .common-navbar {
+    background: rgba(255, 255, 255, .85);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--hms-border);
+}
+body .navbar-logout { border-radius: 999px; }
+
+/* =====================================================================
+   COLOR PALETTE PER CARD (cards cycle through 6 bright colors)
+   ===================================================================== */
+body [class$="-stat-card"]:nth-child(6n+1), body [class$="-action-card"]:nth-child(6n+1), body [class$="-quick-card"]:nth-child(6n+1) { --c1:#3b82f6; --c2:#2563eb; --tint:#eff6ff; }
+body [class$="-stat-card"]:nth-child(6n+2), body [class$="-action-card"]:nth-child(6n+2), body [class$="-quick-card"]:nth-child(6n+2) { --c1:#14b8a6; --c2:#0d9488; --tint:#f0fdfa; }
+body [class$="-stat-card"]:nth-child(6n+3), body [class$="-action-card"]:nth-child(6n+3), body [class$="-quick-card"]:nth-child(6n+3) { --c1:#8b5cf6; --c2:#7c3aed; --tint:#f5f3ff; }
+body [class$="-stat-card"]:nth-child(6n+4), body [class$="-action-card"]:nth-child(6n+4), body [class$="-quick-card"]:nth-child(6n+4) { --c1:#f59e0b; --c2:#ea580c; --tint:#fff7ed; }
+body [class$="-stat-card"]:nth-child(6n+5), body [class$="-action-card"]:nth-child(6n+5), body [class$="-quick-card"]:nth-child(6n+5) { --c1:#f43f5e; --c2:#e11d48; --tint:#fff1f2; }
+body [class$="-stat-card"]:nth-child(6n+6), body [class$="-action-card"]:nth-child(6n+6), body [class$="-quick-card"]:nth-child(6n+6) { --c1:#06b6d4; --c2:#0891b2; --tint:#ecfeff; }
+
+/* =====================================================================
+   STAT CARDS
+   ===================================================================== */
+body [class$="-stats"], body .ward-stats, body .billing-summary, body .overview-grid, body .beds-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 22px;
+}
+body [class$="-stat-card"], body .status-overview-card, body .billing-summary-card, body .overview-card, body .beds-overview-card {
+    --c1:#3b82f6; --c2:#2563eb; --tint:#eff6ff;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--tint) 0%, #ffffff 70%);
+    border: 1px solid var(--hms-border);
+    border-radius: var(--hms-r-md);
+    box-shadow: var(--hms-shadow-sm);
+    transition: transform .3s var(--hms-ease), box-shadow .3s var(--hms-ease), border-color .3s;
+}
+body [class$="-stat-card"]::after {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 5px;
+    background: linear-gradient(180deg, var(--c1), var(--c2));
+}
+body [class$="-stat-card"]:hover, body .status-overview-card:hover, body .billing-summary-card:hover,
+body .overview-card:hover, body .beds-overview-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 34px rgba(30, 64, 120, .14);
+    border-color: var(--c1);
+}
+body [class$="-stat-icon"], body .stat-icon {
+    background: linear-gradient(135deg, var(--c1), var(--c2));
+    color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 18px rgba(30, 64, 120, .22);
+    transition: transform .3s var(--hms-ease);
+}
+body [class$="-stat-card"]:hover [class$="-stat-icon"], body [class$="-stat-card"]:hover .stat-icon { transform: scale(1.1) rotate(-5deg); }
+body [class$="-stat-card"] :is(h2, h3, strong) {
+    font-family: "Plus Jakarta Sans", Inter, sans-serif;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    color: var(--hms-text);
+}
+
+/* =====================================================================
+   QUICK-ACTION CARDS
+   ===================================================================== */
+body [class$="-action-grid"], body .quick-actions, body [class$="-quick-grid"], body .doctor-patient-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 22px;
+}
+body [class$="-action-card"], body [class$="-quick-card"] {
+    --c1:#3b82f6; --c2:#2563eb; --tint:#eff6ff;
+    position: relative;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid var(--hms-border);
+    border-radius: var(--hms-r-md);
+    box-shadow: var(--hms-shadow-sm);
+    transition: transform .3s var(--hms-ease), box-shadow .3s var(--hms-ease), border-color .3s;
+}
+body [class$="-action-card"]::before, body [class$="-quick-card"]::before {
+    content: "";
+    position: absolute;
+    right: -40px; bottom: -40px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: var(--tint);
+    transition: transform .4s var(--hms-ease);
+}
+body [class$="-action-card"] > *, body [class$="-quick-card"] > * { position: relative; z-index: 1; }
+body [class$="-action-card"]:hover, body [class$="-quick-card"]:hover {
+    transform: translateY(-6px);
+    border-color: var(--c1);
+    box-shadow: 0 18px 36px rgba(30, 64, 120, .14);
+}
+body [class$="-action-card"]:hover::before, body [class$="-quick-card"]:hover::before { transform: scale(1.8); }
+body [class$="-action-icon"], body .action-icon {
+    background: linear-gradient(135deg, var(--c1), var(--c2));
+    color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 18px rgba(30, 64, 120, .20);
+    transition: transform .3s var(--hms-ease);
+}
+body [class$="-action-card"]:hover [class$="-action-icon"], body [class$="-action-card"]:hover .action-icon,
+body [class$="-quick-card"]:hover [class$="-action-icon"] { transform: scale(1.1) rotate(-5deg); }
+
+/* =====================================================================
+   CONTENT CARDS
+   ===================================================================== */
+body [class$="-table-card"], body [class$="-form-card"], body [class$="-filter-card"], body [class$="-profile-card"],
+body .overview-note, body .confirm-dialog, body .result-card, body [class$="-prescription-card"],
+body [class$="-admission-card"], body [class$="-history-card"], body .allocation-card,
+body .doctor-selection-card, body .process-list-card, body .process-form-card, body .detail-item {
+    background: #fff;
+    border: 1px solid var(--hms-border);
+    border-radius: var(--hms-r-md);
+    box-shadow: var(--hms-shadow-sm);
+}
+body [class$="-prescription-card"], body [class$="-admission-card"], body [class$="-history-card"],
+body .doctor-selection-card, body .result-card {
+    transition: transform .3s var(--hms-ease), box-shadow .3s var(--hms-ease), border-color .3s;
+}
+body [class$="-prescription-card"]:hover, body [class$="-admission-card"]:hover, body [class$="-history-card"]:hover,
+body .doctor-selection-card:hover, body .result-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--hms-shadow-md);
+    border-color: #93c5fd;
+}
+body [class$="-section-heading"] :is(h2, h3), body [class$="-section-header"] :is(h2, h3), body [class$="-form-heading"] :is(h2, h3) {
+    position: relative;
+    padding-left: 14px;
+    font-weight: 800;
+    color: var(--hms-text);
+}
+body [class$="-section-heading"] :is(h2, h3)::before, body [class$="-section-header"] :is(h2, h3)::before, body [class$="-form-heading"] :is(h2, h3)::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 12%; bottom: 12%;
+    width: 5px;
+    border-radius: 5px;
+    background: var(--hms-grad);
+}
+
+/* hero banners */
+body .lab-welcome-card, body .admin-welcome, body .overview-header-card {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(500px 220px at 90% -20%, rgba(255, 255, 255, .35), transparent 65%),
+        var(--hms-grad);
+    border-radius: var(--hms-r-lg);
+    box-shadow: 0 18px 40px rgba(37, 99, 235, .25);
+}
+body .lab-welcome-card::after, body .admin-welcome::after, body .overview-header-card::after {
+    content: "";
+    position: absolute;
+    right: -60px; bottom: -80px;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    border: 36px solid rgba(255, 255, 255, .12);
+    pointer-events: none;
+}
+
+/* =====================================================================
+   TABLES
+   ===================================================================== */
+body [class$="-table-card"], body [class$="-table-wrapper"], body [class$="-table-container"] { overflow-x: auto; }
+body [class$="-table"] { border-collapse: separate; border-spacing: 0; width: 100%; }
+body [class$="-table"] th {
+    background: #eef5ff;
+    color: #3b5a85;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #dbe7f7;
+    position: sticky; top: 0; z-index: 1;
+}
+body [class$="-table"] th:first-child { border-top-left-radius: 12px; }
+body [class$="-table"] th:last-child  { border-top-right-radius: 12px; }
+body [class$="-table"] td { border-bottom: 1px solid #eef2f8; transition: background .2s; }
+body [class$="-table"] tbody tr:hover td { background: #f3f8ff; }
+body [class$="-table"] tbody tr:last-child td { border-bottom: none; }
+
+/* badges (your colors kept, nicer shape) */
+body [class$="-status"], body [class$="-badge"], body .status-approved, body .status-pending,
+body .status-rejected, body .status-inactive, body .status-default {
+    border-radius: 999px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    padding-left: 12px; padding-right: 12px;
+}
+
+/* =====================================================================
+   BUTTONS
+   ===================================================================== */
+body [class$="-primary-btn"], body [class$="-primary-button"], body .primary-btn, body .auth-button,
+body .bed-submit, body [class$="-submit-button"] {
+    background: var(--hms-grad);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, .28);
+    transition: transform .25s var(--hms-ease), box-shadow .25s var(--hms-ease), filter .2s;
+}
+body [class$="-primary-btn"]:hover:not(:disabled), body [class$="-primary-button"]:hover:not(:disabled),
+body .primary-btn:hover:not(:disabled), body .auth-button:hover:not(:disabled),
+body .bed-submit:hover:not(:disabled), body [class$="-submit-button"]:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 26px rgba(37, 99, 235, .38);
+    filter: brightness(1.06);
+}
+body [class$="-primary-btn"]:active, body [class$="-primary-button"]:active, body .primary-btn:active, body .auth-button:active { transform: scale(.98); }
+
+body [class$="-secondary-btn"], body [class$="-secondary-button"], body [class$="-outline-button"], body .secondary-btn,
+body [class$="-refresh-btn"], body [class$="-refresh-button"], body .refresh-btn, body .refresh-button,
+body [class$="-back-button"], body .back-button, body .back-dashboard-btn,
+body [class$="-small-btn"], body .small-action-btn, body .action-btn, body .table-action, body .delete-btn,
+body .reject-btn, body .approve-btn, body .activate-btn, body .deactivate-btn, body [class$="-small-danger-button"],
+body [class$="-view-btn"], body .view-all-btn, body .filter-btn {
+    border-radius: 11px;
+    font-weight: 600;
+    transition: transform .2s var(--hms-ease), box-shadow .2s, filter .2s;
+}
+body [class$="-secondary-btn"]:hover:not(:disabled), body [class$="-secondary-button"]:hover:not(:disabled),
+body [class$="-outline-button"]:hover:not(:disabled), body .secondary-btn:hover:not(:disabled),
+body [class$="-refresh-btn"]:hover:not(:disabled), body [class$="-refresh-button"]:hover:not(:disabled),
+body .refresh-btn:hover:not(:disabled), body .refresh-button:hover:not(:disabled),
+body [class$="-back-button"]:hover, body .back-button:hover, body .back-dashboard-btn:hover,
+body [class$="-small-btn"]:hover:not(:disabled), body .small-action-btn:hover:not(:disabled),
+body .action-btn:hover:not(:disabled), body .table-action:hover:not(:disabled), body .delete-btn:hover:not(:disabled),
+body .reject-btn:hover:not(:disabled), body .approve-btn:hover:not(:disabled), body .activate-btn:hover:not(:disabled),
+body .deactivate-btn:hover:not(:disabled), body [class$="-view-btn"]:hover:not(:disabled), body .view-all-btn:hover, body .filter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(30, 64, 120, .14);
+    filter: brightness(.97);
+}
+body button:focus-visible, body a:focus-visible { outline: none; box-shadow: var(--hms-ring); }
+
+/* =====================================================================
+   FORMS
+   ===================================================================== */
+body input:not([type="checkbox"]):not([type="radio"]), body select, body textarea {
+    background: #fff;
+    border: 1.5px solid #d9e3ef;
+    border-radius: 12px;
+    color: var(--hms-text);
+    transition: border-color .2s, box-shadow .2s;
+}
+body input:not([type="checkbox"]):not([type="radio"]):hover, body select:hover, body textarea:hover { border-color: #aebfd4; }
+body input:not([type="checkbox"]):not([type="radio"]):focus, body select:focus, body textarea:focus {
+    outline: none;
+    border-color: var(--hms-blue);
+    box-shadow: var(--hms-ring);
+}
+body [class$="-form-group"] label, body .form-group label { color: #334155; font-weight: 600; }
+body [class$="-form-grid"] { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+body [class$="-form-grid"] .full-width, body [class$="-form-grid"] [class$="-form-actions"] { grid-column: 1 / -1; }
+body [class$="-search"], body [class$="-search-box"], body .patient-search-input { border-radius: 999px; }
+
+/* feedback & states */
+body [class$="-error"], body .error-message, body [class$="-success"], body .success-message {
+    border-radius: 12px; font-weight: 500; animation: hmsPop .35s var(--hms-ease) both;
+}
+body [class$="-empty"], body .bed-no-data, body .empty-calendar {
+    border-radius: var(--hms-r-md);
+    border: 2px dashed #c9d8ea;
+    background: rgba(255, 255, 255, .7);
+}
+body [class$="-spinner"], body .loading-spinner { border-top-color: var(--hms-blue); }
+body .dialog-overlay { backdrop-filter: blur(6px); background: rgba(15, 30, 60, .35); }
+body .confirm-dialog { border-radius: var(--hms-r-lg); box-shadow: 0 30px 60px rgba(30, 64, 120, .25); animation: hmsPop .3s var(--hms-ease) both; }
+body .dialog-confirm { background: var(--hms-grad); border-radius: 12px; }
+body .dialog-cancel { border-radius: 12px; }
+body [class$="-progress-track"] { border-radius: 999px; overflow: hidden; }
+body [class$="-progress-fill"] { background: var(--hms-grad); border-radius: 999px; }
+
+/* =====================================================================
+   LOGIN / REGISTER — bright
+   ===================================================================== */
+body .auth-page {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(600px 420px at 12% 12%, rgba(45, 212, 191, .45), transparent 65%),
+        radial-gradient(640px 460px at 90% 85%, rgba(99, 102, 241, .35), transparent 65%),
+        radial-gradient(500px 360px at 85% 8%, rgba(56, 189, 248, .35), transparent 65%),
+        linear-gradient(135deg, #f0f9ff, #f5f3ff);
+}
+body .auth-page::before, body .auth-page::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; }
+body .auth-page::before { width: 360px; height: 360px; left: -110px; bottom: -110px; border: 56px solid rgba(37, 99, 235, .07); }
+body .auth-page::after  { width: 260px; height: 260px; right: -70px; top: -70px; border: 44px solid rgba(20, 184, 166, .10); }
+body .auth-card {
+    position: relative; z-index: 1;
+    background: #fff;
+    border: 1px solid #e6edf5;
+    border-radius: 28px;
+    box-shadow: 0 30px 70px rgba(30, 64, 120, .18), 0 4px 14px rgba(30, 64, 120, .06);
+}
+body .auth-card h1 { color: var(--hms-text); font-weight: 800; }
+body .auth-card h1::before { background: var(--hms-grad); color: #fff; box-shadow: 0 12px 24px rgba(37, 99, 235, .35); }
+body .auth-card a { color: #1d4ed8; font-weight: 600; }
+body .auth-card a:hover { text-decoration: underline; }
+body .auth-button { width: 100%; padding: 14px; font-size: 15px; }
+
+
+/* =====================================================================
+   CLASSES THAT HAD NO CSS IN YOUR PROJECT (now styled)
+   ===================================================================== */
+
+/* Admin: "Administrative Responsibilities" -> box grid */
+body .responsibility-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 22px;
+}
+body .responsibility-card {
+    --c1:#3b82f6; --c2:#2563eb; --tint:#eff6ff;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 22px;
+    background: linear-gradient(135deg, var(--tint) 0%, #fff 75%);
+    border: 1px solid var(--hms-border);
+    border-radius: var(--hms-r-md);
+    box-shadow: var(--hms-shadow-sm);
+    transition: transform .3s var(--hms-ease), box-shadow .3s var(--hms-ease), border-color .3s;
+}
+body .responsibility-card:nth-child(6n+2) { --c1:#14b8a6; --c2:#0d9488; --tint:#f0fdfa; }
+body .responsibility-card:nth-child(6n+3) { --c1:#8b5cf6; --c2:#7c3aed; --tint:#f5f3ff; }
+body .responsibility-card:nth-child(6n+4) { --c1:#f59e0b; --c2:#ea580c; --tint:#fff7ed; }
+body .responsibility-card:nth-child(6n+5) { --c1:#f43f5e; --c2:#e11d48; --tint:#fff1f2; }
+body .responsibility-card:nth-child(6n+6) { --c1:#06b6d4; --c2:#0891b2; --tint:#ecfeff; }
+body .responsibility-card::after {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 5px;
+    background: linear-gradient(180deg, var(--c1), var(--c2));
+}
+body .responsibility-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--c1);
+    box-shadow: 0 16px 34px rgba(30, 64, 120, .14);
+}
+body .responsibility-card > span {
+    flex: 0 0 auto;
+    width: 46px; height: 46px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--c1), var(--c2));
+    color: #fff;
+    font-size: 20px;
+    font-weight: 800;
+    box-shadow: 0 8px 18px rgba(30, 64, 120, .22);
+}
+body .responsibility-card strong {
+    display: block;
+    font-family: "Plus Jakarta Sans", Inter, sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--hms-text);
+    margin-bottom: 6px;
+}
+body .responsibility-card p { margin: 0; color: var(--hms-muted); font-size: 13.5px; line-height: 1.55; }
+
+/* Stat grids used by Bed + Patient bills pages */
+body .bed-stats-grid, body .patient-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 22px;
+    margin-bottom: 28px;
+}
+
+/* Bed module forms / buttons / messages */
+body .bed-form { display: flex; flex-direction: column; gap: 20px; }
+body .bed-form-actions, body .patient-profile-actions {
+    display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 8px;
+}
+body .bed-secondary-button {
+    background: #fff; color: #334155; border: 1.5px solid #d9e3ef; padding: 11px 20px; cursor: pointer;
+}
+body .bed-secondary-button:hover { border-color: #93c5fd; color: #1d4ed8; }
+body .bed-edit-btn, body .bed-edit-button {
+    background: #eef5ff; color: #1d4ed8; border: 1px solid #cfe0fb;
+    padding: 7px 16px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer;
+    transition: transform .2s var(--hms-ease), background .2s, box-shadow .2s;
+}
+body .bed-edit-btn:hover, body .bed-edit-button:hover {
+    background: var(--hms-grad); color: #fff; border-color: transparent;
+    transform: translateY(-2px); box-shadow: 0 8px 16px rgba(37, 99, 235, .28);
+}
+body .bed-success {
+    background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;
+    padding: 13px 18px; border-radius: 12px; margin-bottom: 18px; font-weight: 500;
+}
+body .bed-error {
+    background: #fff1f2; color: #be123c; border: 1px solid #fecdd3;
+    padding: 13px 18px; border-radius: 12px; margin-bottom: 18px; font-weight: 500;
+}
+body .bed-sidebar-user-name { color: var(--hms-text); font-weight: 600; font-size: 13px; }
+body .status-occupied { background: #fee2e2; color: #b91c1c; }
+
+/* Patient profile fields + empty icon */
+body .patient-profile-field { display: flex; flex-direction: column; gap: 8px; }
+body .patient-profile-field label { color: #334155; font-weight: 600; font-size: 13px; }
+body .patient-empty-icon {
+    width: 76px; height: 76px; margin: 0 auto 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 34px; border-radius: 22px; background: var(--hms-grad-soft);
+}
+
+/* Admin appointments: person cell */
+body .appointment-person { display: flex; align-items: center; gap: 12px; }
+body .appointment-avatar {
+    width: 38px; height: 38px; flex: 0 0 auto; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--hms-grad); color: #fff; font-weight: 700; font-size: 14px;
+}
+body .appointment-avatar.doctor-avatar { background: linear-gradient(135deg, #8b5cf6, #6366f1); }
+
+/* responsive */
+@media (max-width: 640px) {
+    body [class$="-stats"], body [class$="-action-grid"], body [class$="-form-grid"] { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+    body *, body *::before, body *::after { animation: none !important; transition: none !important; }
+}
+
+
+/* ===== ORIGINAL index.css (unchanged) ===== */
 /* =========================================
    HMS GLOBAL CSS
    ========================================= */
@@ -61,4 +650,38 @@ img {
 
 #root {
     min-height: 100vh;
+}
+
+/* Keep the admin workspace calm and light while preserving readable text. */
+body .admin-layout {
+    --hms-text: #334155;
+    --hms-muted: #718096;
+    background: #fcfdff;
+    color: var(--hms-text);
+}
+
+body .admin-sidebar {
+    background: #f8fbff;
+    color: #334155;
+    border-right: 1px solid #edf2f8;
+    box-shadow: 4px 0 20px rgba(30, 64, 120, .04);
+}
+
+body .admin-sidebar .admin-menu-item {
+    color: #64748b;
+}
+
+body .admin-sidebar .admin-menu-item:hover {
+    background: #edf7ff;
+    color: #2563a6;
+}
+
+body .admin-sidebar .admin-menu-item.active {
+    background: linear-gradient(135deg, #d9f5f0, #e5efff);
+    color: #0f766e;
+    box-shadow: 0 4px 12px rgba(30, 64, 120, .08);
+}
+
+body .admin-sidebar [class$="-menu-item"].active * {
+    color: #0f766e;
 }
