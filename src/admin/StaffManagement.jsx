@@ -952,6 +952,9 @@ const StaffManagement = () => {
             {dialog.open && (
 
                 <ConfirmDialog
+                    isOpen={
+                        dialog.open
+                    }
                     title={
                         dialog.title
                     }
